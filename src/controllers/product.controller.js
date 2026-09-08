@@ -1,4 +1,5 @@
 import Product from "../models/product.model.js";
+import Review from "../models/reviews.model.js";
 
 export const createProduct = async (req, res) => {
     const { name, price, originalPrice, category } = req.body;
@@ -152,9 +153,30 @@ export const getAllProducts = async (req, res, next) => {
             limitNum
         );
 
+        const productIds = products.map((product) => product._id);
+        const ratingSummaries = await Review.aggregate([
+            { $match: { product: { $in: productIds } } },
+            {
+                $group: {
+                    _id: "$product",
+                    averageRating: { $avg: "$rating" },
+                },
+            },
+        ]);
+        const ratingsByProduct = new Map(
+            ratingSummaries.map(({ _id, averageRating }) => [
+                _id.toString(),
+                averageRating,
+            ])
+        );
+        const productsWithRatings = products.map((product) => ({
+            ...product.toObject(),
+            rating: ratingsByProduct.get(product._id.toString()) || 0,
+        }));
+
         res.status(200).json({
             success: true,
-            products,
+            products: productsWithRatings,
             currentPage: pageNum,
             totalPages,
             totalProducts

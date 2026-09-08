@@ -1,4 +1,5 @@
 import Order from "../models/order.model.js";
+import Cart from "../models/cart.models.js";
 import Product from "../models/product.model.js";
 import User from "../models/user.model.js";
 
@@ -9,6 +10,7 @@ export const createOrder = async (req, res) => {
     try {
         const order = new Order({ user, products });
         await order.save();
+        await Cart.findOneAndUpdate({ userId: user }, { $set: { items: [] } });
         res.status(201).json(order);
     } catch (error) {
         res.status(400).json({ message: error.message });

@@ -2,6 +2,15 @@ import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+export const getCurrentUser = async (req, res) => {
+  res.status(200).json({
+    id: req.user._id,
+    name: req.user.name,
+    email: req.user.email,
+    role: req.user.role,
+  });
+};
+
 export const registerUser = async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -100,15 +109,8 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
   try {
-    const token =
-      req.cookie?.token || req.headers?.authorization?.split(" ")[1];
-    if (!token) {
-    //   console.log(token);
-      return res.status(400).json({ message: "No token Provided" });
-    }
-
     res
-      .clearCookie(token, { httpOnly: true, sameSite: "lax" })
+      .clearCookie("token", { httpOnly: true, sameSite: "lax", path: "/" })
       .status(200)
       .json({ message: "Logged out successfully" });
   } catch (error) {
