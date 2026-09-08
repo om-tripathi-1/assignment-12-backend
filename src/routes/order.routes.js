@@ -5,7 +5,7 @@ import {
   getOrderById,
   updateOrderStatus,
   getOrdersByUser,
-} from "../contollers/order.controller";
+} from "../controllers/order.controller.js";
 import { verifyToken, isAdmin } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
