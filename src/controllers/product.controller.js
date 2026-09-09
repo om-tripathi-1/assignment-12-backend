@@ -7,13 +7,11 @@ export const createProduct = async (req, res) => {
         // console.log(req.body);
         // console.log(req.files);
 
-        const images = req.files.map((file) => ({
-            filename: file.filename,
-            path: file.path,
-        }));
+        const images = (req.files || []).map((file) => `/assets/${file.filename}`);
+        const variants = parseVariants(req.body.variants);
 
         const product = new Product({
-            name, price, originalPrice, category, images,
+            name, price, originalPrice, category, images, variants,
         });
 
         await product.save();
@@ -232,7 +230,17 @@ export const getProductById = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
     try {
-        const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const updates = { ...req.body };
+        if (typeof updates.variants === "string") {
+            updates.variants = parseVariants(updates.variants);
+        }
+        if (req.files?.length) {
+            updates.images = req.files.map((file) => `/assets/${file.filename}`);
+        }
+        const product = await Product.findByIdAndUpdate(req.params.id, updates, {
+            new: true,
+            runValidators: true,
+        });
         if (!product) {
             return res.status(404).json({
                 success: false,
@@ -248,6 +256,17 @@ export const updateProduct = async (req, res) => {
             success: false,
             message: error.message,
         });
+    }
+};
+
+const parseVariants = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+
+    try {
+        return JSON.parse(value);
+    } catch {
+        return [];
     }
 };
 

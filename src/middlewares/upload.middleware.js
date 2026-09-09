@@ -1,8 +1,12 @@
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 
-const uploadFolder = path.resolve("src/assets");
+const uploadFolder = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../assets",
+);
 
 if (!fs.existsSync(uploadFolder)) {
   fs.mkdirSync(uploadFolder, { recursive: true });

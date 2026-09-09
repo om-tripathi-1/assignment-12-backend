@@ -3,7 +3,7 @@ import Category from "../models/category.model.js";
 export const createCategory = async (req, res) => {
     const { name, description } = req.body;
 
-    if (!name || name.trim()) {
+    if (!name || !name.trim()) {
         return res.status(400).json({ message: "Name is required" });
     }
 

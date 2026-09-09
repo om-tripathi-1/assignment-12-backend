@@ -19,7 +19,10 @@ export const createOrder = async (req, res) => {
 
 export const getOrders = async (req, res) => {
     try {
-        const orders = await Order.find().populate("user", "name email").populate("products.product", "name price");
+        const orders = await Order.find()
+            .sort({ createdAt: -1 })
+            .populate("user", "name email")
+            .populate("products.product", "name price originalPrice images");
         res.status(200).json(orders);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -30,7 +33,7 @@ export const getOrderById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const order = await Order.findById(id).populate("user", "name email").populate("products.product", "name price");
+        const order = await Order.findById(id).populate("user", "name email").populate("products.product", "name price originalPrice images");
         if (!order) {
             return res.status(404).json({ message: "Order not found" });
         }

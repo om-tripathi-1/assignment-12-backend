@@ -4,7 +4,7 @@ import Product from "../models/product.model.js";
 const cartQuery = (userId) =>
   Cart.findOne({ userId }).populate(
     "items.productId",
-    "name price originalPrice images",
+    "name price originalPrice images variants",
   );
 
 export const getCart = async (req, res) => {
@@ -17,7 +17,7 @@ export const getCart = async (req, res) => {
 };
 
 export const addCartItem = async (req, res) => {
-  const { productId, quantity = 1 } = req.body;
+  const { productId, quantity = 1, size = "Standard" } = req.body;
 
   try {
     const product = await Product.findById(productId);
@@ -28,14 +28,35 @@ export const addCartItem = async (req, res) => {
       return res.status(400).json({ message: "Quantity must be at least 1" });
     }
 
+    const selectedSize = String(size || "Standard").trim();
+    const variant = product.variants?.find(
+      (productVariant) => productVariant.size === selectedSize,
+    );
+    if (product.variants?.length && !variant) {
+      return res.status(400).json({ message: "Please select a valid size" });
+    }
+    if (variant && variant.quantity < amount) {
+      return res.status(400).json({
+        message: `${selectedSize} has only ${variant.quantity} item(s) available`,
+      });
+    }
+
     let cart = await Cart.findOne({ userId: req.user._id });
     if (!cart) cart = new Cart({ userId: req.user._id, items: [] });
 
     const item = cart.items.find(
-      (cartItem) => cartItem.productId.toString() === productId,
+      (cartItem) =>
+        cartItem.productId.toString() === productId &&
+        (cartItem.size || "Standard") === selectedSize,
     );
-    if (item) item.quantity += amount;
-    else cart.items.push({ productId, quantity: amount });
+    if (item) {
+      if (variant && variant.quantity < item.quantity + amount) {
+        return res.status(400).json({
+          message: `${selectedSize} has only ${variant.quantity} item(s) available`,
+        });
+      }
+      item.quantity += amount;
+    } else cart.items.push({ productId, size: selectedSize, quantity: amount });
 
     await cart.save();
     res.status(200).json(await cartQuery(req.user._id));
@@ -46,6 +67,7 @@ export const addCartItem = async (req, res) => {
 
 export const updateCartItem = async (req, res) => {
   const { quantity } = req.body;
+  const selectedSize = String(req.query.size || "Standard").trim();
 
   try {
     const amount = Number(quantity);
@@ -55,9 +77,21 @@ export const updateCartItem = async (req, res) => {
 
     const cart = await Cart.findOne({ userId: req.user._id });
     const item = cart?.items.find(
-      (cartItem) => cartItem.productId.toString() === req.params.productId,
+      (cartItem) =>
+        cartItem.productId.toString() === req.params.productId &&
+        (cartItem.size || "Standard") === selectedSize,
     );
     if (!item) return res.status(404).json({ message: "Cart item not found" });
+
+    const product = await Product.findById(req.params.productId).select("variants");
+    const variant = product?.variants?.find(
+      (productVariant) => productVariant.size === selectedSize,
+    );
+    if (product?.variants?.length && (!variant || variant.quantity < amount)) {
+      return res.status(400).json({
+        message: `${selectedSize} does not have enough stock`,
+      });
+    }
 
     item.quantity = amount;
     await cart.save();
@@ -68,12 +102,15 @@ export const updateCartItem = async (req, res) => {
 };
 
 export const removeCartItem = async (req, res) => {
+  const selectedSize = String(req.query.size || "Standard").trim();
   try {
     const cart = await Cart.findOne({ userId: req.user._id });
     if (!cart) return res.status(404).json({ message: "Cart item not found" });
 
     cart.items = cart.items.filter(
-      (item) => item.productId.toString() !== req.params.productId,
+      (item) =>
+        item.productId.toString() !== req.params.productId ||
+        (item.size || "Standard") !== selectedSize,
     );
     await cart.save();
     res.status(200).json(await cartQuery(req.user._id));
