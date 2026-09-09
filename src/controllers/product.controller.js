@@ -44,7 +44,6 @@ export const getAllProducts = async (req, res, next) => {
 
         const query = {};
 
-        // Search by product name
         if (search) {
             query.name = {
                 $regex: search,
@@ -52,12 +51,10 @@ export const getAllProducts = async (req, res, next) => {
             };
         }
 
-        // Filter by category
         if (category) {
             query.category = category;
         }
 
-        // Filter by price range
         if (minPrice !== undefined || maxPrice !== undefined) {
             query.price = {};
 
@@ -70,7 +67,6 @@ export const getAllProducts = async (req, res, next) => {
             }
         }
 
-        // Filter by stock
         const rawStock = stock || availability;
 
         if (rawStock !== undefined && rawStock !== "") {
@@ -109,7 +105,6 @@ export const getAllProducts = async (req, res, next) => {
             }
         }
 
-        // Sorting
         let sortOptions = { createdAt: -1 };
 
         if (sort === "price_asc") {
@@ -122,7 +117,6 @@ export const getAllProducts = async (req, res, next) => {
             sortOptions = { name: 1 };
         }
 
-        // Pagination
         const pageNum = Math.max(
             1,
             parseInt(page, 10) || 1
@@ -135,15 +129,12 @@ export const getAllProducts = async (req, res, next) => {
 
         const skip = (pageNum - 1) * limitNum;
 
-        // Get total products
         const totalProducts = await countProductsRepo(query);
 
-        // Calculate total pages
         const totalPages = Math.ceil(
             totalProducts / limitNum
         );
 
-        // Get products
         const products = await findProductsRepo(
             query,
             sortOptions,

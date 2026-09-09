@@ -16,20 +16,12 @@ const seedDatabase = async () => {
 
         console.log("MongoDB connected");
 
-        // --------------------------------------------------
-        // 1. CLEAR EXISTING DATA
-        // --------------------------------------------------
-
         await Review.deleteMany({});
         await Product.deleteMany({});
         await Category.deleteMany({});
         await User.deleteMany({});
 
         console.log("Old data cleared");
-
-        // --------------------------------------------------
-        // 2. CREATE USERS
-        // --------------------------------------------------
 
         const hashedPassword = await bcrypt.hash("password123", 10);
 
@@ -68,10 +60,6 @@ const seedDatabase = async () => {
 
         console.log(`${users.length} users created`);
 
-        // --------------------------------------------------
-        // 3. CREATE CATEGORIES
-        // --------------------------------------------------
-
         const categories = await Category.insertMany([
             {
                 name: "Casual",
@@ -100,24 +88,12 @@ const seedDatabase = async () => {
 
         console.log(`${categories.length} categories created`);
 
-        // --------------------------------------------------
-        // CATEGORY IDS
-        // --------------------------------------------------
-
         const casual = categories.find((cat) => cat.name === "Casual");
         const party = categories.find((cat) => cat.name === "Party");
         const gym = categories.find((cat) => cat.name === "Gym");
         const formal = categories.find((cat) => cat.name === "Formal");
 
-        // --------------------------------------------------
-        // 4. CREATE PRODUCTS
-        // --------------------------------------------------
-
         const products = [
-            // =========================
-            // CASUAL
-            // =========================
-
             {
                 name: "Classic Cotton T-Shirt",
                 description: "Soft cotton t-shirt perfect for everyday casual wear.",
@@ -259,10 +235,6 @@ const seedDatabase = async () => {
                 category: casual._id,
             },
 
-            // =========================
-            // PARTY
-            // =========================
-
             {
                 name: "Party Black Shirt",
                 description: "Stylish black shirt designed for parties and nightlife.",
@@ -389,10 +361,6 @@ const seedDatabase = async () => {
                 category: party._id,
             },
 
-            // =========================
-            // GYM
-            // =========================
-
             {
                 name: "Performance Gym T-Shirt",
                 description: "Breathable performance t-shirt for intense workouts.",
@@ -518,10 +486,6 @@ const seedDatabase = async () => {
                 originalPrice: 1799,
                 category: gym._id,
             },
-
-            // =========================
-            // FORMAL
-            // =========================
 
             {
                 name: "Classic Formal Shirt",
@@ -675,10 +639,6 @@ const seedDatabase = async () => {
 
         console.log(`${createdProducts.length} products created`);
 
-        // --------------------------------------------------
-        // 5. CREATE REVIEWS
-        // --------------------------------------------------
-
         const reviewComments = [
             "Really good quality. Very happy with the purchase.",
             "The fit is perfect and the material feels great.",
@@ -696,10 +656,6 @@ const seedDatabase = async () => {
             "I really liked the design and fitting.",
             "Good quality product for everyday use.",
         ];
-
-        // --------------------------------------------------
-        // PRODUCT-SPECIFIC REVIEW COMMENTS
-        // --------------------------------------------------
 
         const productComments = {
             "Classic Cotton T-Shirt": [
@@ -767,19 +723,12 @@ const seedDatabase = async () => {
             ],
         };
 
-        // --------------------------------------------------
-        // GENERATE REVIEWS
-        // --------------------------------------------------
-
         const reviews = [];
 
         createdProducts.forEach((product, productIndex) => {
-            // 5 reviews for every product
             for (let i = 0; i < 5; i++) {
-                // Rotate through the 5 users
                 const user = users[(productIndex + i) % users.length];
 
-                // Use product-specific comments if available
                 let comment;
 
                 if (productComments[product.name]) {
@@ -789,7 +738,6 @@ const seedDatabase = async () => {
                         reviewComments[(productIndex * 5 + i) % reviewComments.length];
                 }
 
-                // Slightly different ratings
                 const ratings = [5, 4, 5, 4, 5];
 
                 reviews.push({
