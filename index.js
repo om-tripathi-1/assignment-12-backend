@@ -24,7 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/assets", express.static(path.join(__dirname, "assets")));
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: "https://assignment-12-frontend-six.vercel.app/",
   credentials: true,
 }));
 
