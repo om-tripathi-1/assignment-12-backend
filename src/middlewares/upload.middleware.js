@@ -7,6 +7,14 @@ const uploadFolder = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../../assets",
 );
+const maxImageSize = 5 * 1024 * 1024;
+const acceptedImageTypes = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/avif",
+]);
 
 if (!fs.existsSync(uploadFolder)) {
   fs.mkdirSync(uploadFolder, { recursive: true });
@@ -23,10 +31,10 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) {
+  if (acceptedImageTypes.has(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Only image files are allowed"), false);
+    cb(new Error("Only JPG, JPEG, PNG, WebP, GIF, and AVIF images are allowed"), false);
   }
 };
 
@@ -34,6 +42,6 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024,
+    fileSize: maxImageSize,
   },
 });
