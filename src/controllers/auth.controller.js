@@ -2,6 +2,19 @@ import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
+const getCookieOptions = (req) => {
+  const isSecureRequest =
+    req.secure || req.headers["x-forwarded-proto"] === "https";
+
+  return {
+    httpOnly: true,
+    sameSite: isSecureRequest ? "none" : "lax",
+    secure: Boolean(isSecureRequest),
+    path: "/",
+    maxAge: 3600000,
+  };
+};
+
 export const getCurrentUser = async (req, res) => {
   res.status(200).json({
     id: req.user._id,
@@ -48,12 +61,7 @@ export const registerUser = async (req, res) => {
     await newUser.save();
 
     res
-      .cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        maxAge: 3600000,
-      })
+      .cookie("token", token, getCookieOptions(req))
       .status(201)
       .json({
         message: "User registered successfully",
@@ -88,12 +96,7 @@ export const loginUser = async (req, res) => {
     });
 
     res
-      .cookie("token", token, {
-        httpOnly: true,
-        path: "/",
-        sameSite: "lax",
-        maxAge: 3600000,
-      })
+      .cookie("token", token, getCookieOptions(req))
       .status(200)
       .json({
         message: "Login Success",
@@ -108,7 +111,7 @@ export const loginUser = async (req, res) => {
 export const logoutUser = async (req, res) => {
   try {
     res
-      .clearCookie("token", { httpOnly: true, sameSite: "lax", path: "/" })
+      .clearCookie("token", getCookieOptions(req))
       .status(200)
       .json({ message: "Logged out successfully" });
   } catch (error) {
